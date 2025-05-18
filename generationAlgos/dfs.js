@@ -1,6 +1,7 @@
 // dfs.js - Fixed DFS Algorithm using unified Cell class
-import { Cell } from './cell.js';
-import { startTimer, stopTimer, updateInfo } from './mazeInfo.js';
+import { Cell } from '../cell.js';
+import { startTimer, stopTimer, updateInfo } from '../mazeInfo.js';
+
 
 export let grid = [];
 export let cols, rows;
@@ -15,9 +16,9 @@ export function index(i, j) {
   return i + j * cols;
 }
 
-export function generateMaze(p) {
+export function generateMaze(p,width, height) {
   startTimer();
-  let cnv = p.createCanvas(400, 400);
+  let cnv = p.createCanvas(width, height);
   cnv.parent("canvas-container");
   p.frameRate(60);
 
@@ -71,6 +72,7 @@ export function mazeDraw(p) {
     }
   }
   updateInfo({
+    mode: 'generation',
     cols,
     rows,
     algorithm: "DFS",

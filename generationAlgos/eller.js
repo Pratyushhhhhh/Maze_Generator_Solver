@@ -1,5 +1,5 @@
-import { Cell } from './cell.js';
-import { startTimer, stopTimer, updateInfo } from './mazeInfo.js';
+import { Cell } from '../cell.js';
+import { startTimer, stopTimer, updateInfo } from '../mazeInfo.js';
 
 export let grid = [];
 export let cols, rows;
@@ -14,9 +14,9 @@ export function index(i, j) {
   return i + j * cols;
 }
 
-export function generateMaze(p) {
+export function generateMaze(p, width, height) {
   startTimer();
-  let cnv = p.createCanvas(400, 400);
+  let cnv = p.createCanvas( width, height);
   cnv.parent("canvas-container");
   p.frameRate(10);
 
@@ -52,18 +52,33 @@ export function mazeDraw(p) {
   if (currentRow < rows - 1) {
     generateNextRow(p);
     currentRow++;
-  } else if (currentRow === rows - 1) {
-    finalizeLastRow(p);
-    complete = true;
-    currentRow++;
-    stopTimer();
-  }
+ } else if (currentRow === rows - 1) {
+  finalizeLastRow(p);
+  complete = true;
+  stopTimer(); // Ensure timing is stored before updateInfo
   updateInfo({
-      cols,
-      rows,
-      algorithm: "Eller's",
-      complete
-    });
+    mode: 'generation',
+    cols,
+    rows,
+    algorithm: "Eller's",
+    complete
+  });
+  currentRow++; // move this last
+  return; // exit so it doesn't updateInfo again immediately
+}
+console.log("Current row:", currentRow, "Complete:", complete);
+
+
+if (!complete) {
+  updateInfo({
+    mode: 'generation',
+    cols,
+    rows,
+    algorithm: "Eller's",
+    complete
+  });
+}
+
 }
 
 function generateNextRow(p) {
@@ -131,23 +146,30 @@ function horizontalConnections(p, row) {
   }
 }
 
-function finalizeLastRow(p) {
+function finalizeLastRow() {
   for (let i = 0; i < cols - 1; i++) {
-    const curr = grid[index(i, currentRow)];
-    const next = grid[index(i + 1, currentRow)];
+    let curr = grid[(rows - 1) * cols + i];
+    let next = grid[(rows - 1) * cols + i + 1];
 
     if (curr.set !== next.set) {
-      curr.walls[1] = false;
-      next.walls[3] = false;
+      curr.walls[1] = false; // right
+      next.walls[3] = false; // left
 
-      const oldSet = next.set;
+      let oldSet = next.set;
       for (let j = 0; j < cols; j++) {
-        const cell = grid[index(j, currentRow)];
-        if (cell.set === oldSet) cell.set = curr.set;
+        let c = grid[(rows - 1) * cols + j];
+        if (c.set === oldSet) c.set = curr.set;
       }
     }
   }
+
+  // ✅ Remove bottom walls of the last row to ensure solver access
+  for (let i = 0; i < cols; i++) {
+    let cell = grid[(rows - 1) * cols + i];
+    cell.walls[2] = false;
+  }
 }
+
 
 export function isComplete() {
   return complete;

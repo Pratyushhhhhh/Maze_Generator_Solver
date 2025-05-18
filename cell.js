@@ -1,7 +1,7 @@
 // cell.js - Unified Cell class for all maze algorithms
 
 export class Cell {
-  constructor(i, j, cellSize = 20) {
+  constructor(i, j, cellSize = 10) {
     this.i = i;
     this.j = j;
     this.cellSize = cellSize;
@@ -9,6 +9,9 @@ export class Cell {
     this.visited = false;
     this.parent = null;
     this.set = null; // For Eller's algorithm
+    this.inPath = false;
+    this.parent = null;
+    this.distance = Infinity;
   }
 
   // For visual display

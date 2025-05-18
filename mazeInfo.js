@@ -1,8 +1,12 @@
 // mazeInfo.js
 
-let startTime = null;
-let endTime = null;
-let generationTime = 0;
+let generationStart = null;
+let solveStart = null;
+
+const timings = {
+  generation: 0,
+  solving: 0
+};
 
 const algorithmDetails = {
   "DFS": {
@@ -37,41 +41,92 @@ const algorithmDetails = {
   }
 };
 
-export function startTimer() {
-  startTime = performance.now();
+const solverDetails = {
+  "DFS": {
+    speed: "Fast",
+    timeComplexity: "O(N)",
+    spaceComplexity: "O(N)",
+    remarks: "Depth-first pathfinding"
+  },
+  "BFS": {
+    speed: "Moderate",
+    timeComplexity: "O(N)",
+    spaceComplexity: "O(N)",
+    remarks: "Finds shortest path"
+  },
+  "A*": {
+    speed: "Varies",
+    timeComplexity: "O(E)",
+    spaceComplexity: "O(N)",
+    remarks: "Heuristic-based optimal path"
+  },
+  "Wall Follower": {
+    speed: "Slow",
+    timeComplexity: "O(N)",
+    spaceComplexity: "O(1)",
+    remarks: "Follows maze wall; not guaranteed shortest"
+  },
+  "Dijkstra": {
+    speed: "Moderate",
+    timeComplexity: "O(E log N)",
+    spaceComplexity: "O(N)",
+    remarks: "Shortest path with uniform weights"
+  },
+  "Greedy BFS": {
+    speed: "Fast",
+    timeComplexity: "O(E)",
+    spaceComplexity: "O(N)",
+    remarks: "Heuristic-driven; not always optimal"
+  }
+};
+
+// Timing controls
+export function startTimer(type = 'generation') {
+  if (type === 'generation') generationStart = performance.now();
+  else solveStart = performance.now();
 }
 
-export function stopTimer() {
-  endTime = performance.now();
-  generationTime = ((endTime - startTime) / 1000).toFixed(2);
+export function stopTimer(type = 'generation') {
+  const now = performance.now();
+  if (type === 'generation') {
+    timings.generation = ((now - generationStart) / 1000).toFixed(2);
+  } else {
+    timings.solving = ((now - solveStart) / 1000).toFixed(2);
+  }
 }
 
-export function updateInfo({ cols, rows, algorithm, complete }) {
+// Unified info update
+export function updateInfo(context) {
   const infoDiv = document.getElementById("maze-info");
   if (!infoDiv) return;
 
-  let details = algorithmDetails[algorithm] || {
-    speed: "Unknown",
-    timeComplexity: "Unknown",
-    spaceComplexity: "Unknown",
-    remarks: "No details available."
-  };
+  let content = '';
 
-  if (complete) {
-    infoDiv.innerHTML = `
-      <strong>Maze Size:</strong> ${cols} x ${rows}<br>
-      <strong>Algorithm:</strong> ${algorithm}<br>
-      <strong>Time Taken:</strong> ${generationTime}s<br><br>
-      <strong>Speed:</strong> ${details.speed}<br>
-      <strong>Time Complexity:</strong> ${details.timeComplexity}<br>
-      <strong>Space Complexity:</strong> ${details.spaceComplexity}<br>
-      <strong>Remarks:</strong> ${details.remarks}
+  if (context.mode === 'generation') {
+    const details = algorithmDetails[context.algorithm] || {};
+    content = `
+      <strong>Maze Size:</strong> ${context.cols} × ${context.rows}<br>
+      <strong>Algorithm:</strong> ${context.algorithm}<br>
+      ${context.complete ? `
+        <strong>Gen Time:</strong> ${timings.generation}s<br>
+        <strong>Speed:</strong> ${details.speed || 'N/A'}<br>
+        <strong>Time Complexity:</strong> ${details.timeComplexity || 'N/A'}<br>
+        <strong>Remarks:</strong> ${details.remarks || 'N/A'}
+      ` : '<strong>Status:</strong> Generating...'}
     `;
-  } else {
-    infoDiv.innerHTML = `
-      <strong>Maze Size:</strong> ${cols} x ${rows}<br>
-      <strong>Algorithm:</strong> ${algorithm}<br>
-      <strong>Status:</strong> Generating...
+  } else if (context.mode === 'solving') {
+    const solverKey = context.algorithm.toLowerCase().replace(/\s/g, '');
+    const readableName = solverNameMap[solverKey] || context.algorithm;
+    const details = solverDetails[readableName] || {};
+
+    content = `
+      <strong>Solver:</strong> ${readableName}<br>
+      <strong>Solve Time:</strong> ${timings.solving}s<br>
+      <strong>Result:</strong> ${context.pathFound ? '✅ Path Found' : '❌ No Path'}<br>
+      <strong>Method:</strong> ${details.remarks || 'N/A'}
     `;
   }
+
+  infoDiv.innerHTML = content;
 }
+
